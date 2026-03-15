@@ -138,7 +138,7 @@ interface IProduct {
 
 ```ts
 interface IBuyer {
-  payment: TPayment;
+  payment: 'card' | 'cash' | '';
   email: string;
   phone: string;
   address: string;
@@ -166,7 +166,7 @@ interface IBuyer {
 
 ---
 
-## Каталог товаров
+## Каталог товаров (ProductCatalog)
 
 ### Назначение
 
@@ -193,7 +193,7 @@ constructor();
 
 ### Методы
 
-**setProducts(products: IProduct[]): void**
+**set Products(products: IProduct[]): void**
 
 Сохраняет массив товаров в каталоге.
 
@@ -203,13 +203,13 @@ constructor();
 
 ---
 
-**getProducts(): IProduct[]**
+**get Products(): IProduct[]**
 
 Возвращает массив всех товаров.
 
 ---
 
-**getProductById(id: string): IProduct | undefined**
+**get ProductById(id: string): IProduct | undefined**
 
 Возвращает товар по его идентификатору.
 
@@ -219,7 +219,7 @@ constructor();
 
 ---
 
-**setSelectedProduct(product: IProduct): void**
+**set SelectedProduct(product: IProduct): void**
 
 Сохраняет товар для подробного отображения.
 
@@ -229,13 +229,13 @@ constructor();
 
 ---
 
-**getSelectedProduct(): IProduct | null**
+**get SelectedProduct(): IProduct | null**
 
 Возвращает товар, выбранный для подробного отображения.
 
 ---
 
-## Корзина
+## Корзина (ProductCart)
 
 ### Назначение
 
@@ -289,13 +289,13 @@ constructor();
 
 ---
 
-**getTotalPrice(): number**
+**get TotalPrice(): number**
 
 Возвращает общую стоимость товаров в корзине.
 
 ---
 
-**getItemsCount(): number**
+**get ItemsCount(): number**
 
 Возвращает количество товаров в корзине.
 
@@ -311,7 +311,7 @@ constructor();
 
 ---
 
-## Покупатель
+## Покупатель (CustomerData)
 
 ### Назначение
 
@@ -327,7 +327,7 @@ constructor();
 
 ### Поля
 
-**payment: TPayment**
+**payment: 'card' | 'cash' | ''**
 
 Выбранный способ оплаты.
 
@@ -345,14 +345,14 @@ constructor();
 
 ### Методы
 
-**setData(data: Partial<IBuyer>): void**
+**set Data(data: Partial<IBuyer>): void**
 
 Сохраняет данные покупателя.  
 Метод позволяет изменять только отдельные поля, не удаляя уже сохранённые значения.
 
 ---
 
-**getData(): IBuyer**
+**get Data(): IBuyer**
 
 Возвращает все данные покупателя.
 
@@ -386,3 +386,118 @@ constructor();
 ```
 {}
 ```
+# Слой коммуникации 
+
+Слой коммуникации отвечает за получение и отправку данных на сервер
+
+## Класс ApiService
+### Назначение
+Отвечает за взаимодействие приложения с сервером: получение данных о товарах
+и отправку данных заказа.
+Класс использует **композицию** — содержит экземпляр класса `Api` и использует  методы `get()` и `post()` для выполнения HTTP запросов.
+
+### Конструктор
+
+```ts
+constructor(api: IApi);
+```
+
+Создаёт экземпляр сервиса с переданным экземпляром API.
+
+Параметры:
+
+- `api: IApi` — экземпляр класса Api для выполнения HTTP запросов
+
+### Поля класса
+
+**api: IApi**
+
+Экземпляр класса Api, используемый для отправки запросов на сервер.
+
+### Методы
+
+**getProducts(): Promise<IProductsResponse>**
+
+Получает список всех товаров с сервера вместе с информацией об их общем количестве.
+
+Выполняет GET запрос на ендпоинт `/product` и возвращает объект со следующей структурой:
+
+```ts
+{
+  total: number;
+  items: IProduct[];
+}
+```
+
+Пример использования:
+
+```ts
+const apiService = new ApiService(api);
+
+apiService.getProducts()
+  .then(response => {
+    console.log('Всего товаров:', response.total);
+    console.log('Товары:', response.items);
+  })
+  .catch(error => {
+    console.error('Ошибка при получении товаров:', error);
+  });
+```
+
+---
+
+**postOrder(orderData: IOrderData): Promise<IOrderResponse>**
+
+Отправляет на сервер данные заказа и получает подтверждение.
+
+Параметры:
+
+- `orderData: IOrderData` — объект с данными заказа:
+  - `payment: 'card' | 'cash'` — способ оплаты
+  - `email: string` — email покупателя
+  - `phone: string` — телефон покупателя  
+  - `address: string` — адрес доставки
+  - `items: string[]` — массив ID товаров в заказе
+  - `total: number` — общая сумма заказа
+
+Возвращает объект подтверждения `IOrderResponse`:
+- `id: string` — ID оформленного заказа
+- `total: number` — сумма заказа
+
+Пример использования:
+
+```ts
+const orderData: IOrderData = {
+  payment: 'card',
+  email: 'customer@example.com',
+  phone: '+7 (999) 123-45-67',
+  address: 'ул. Пушкина, д. 1',
+  items: ['item-1', 'item-2'],
+  total: 5000
+};
+
+apiService.postOrder(orderData)
+  .then(response => {
+    console.log('Заказ оформлен, ID:', response.id);
+    console.log('Сумма к оплате:', response.total);
+  })
+  .catch(error => {
+    console.error('Ошибка при оформлении заказа:', error);
+  });
+```
+
+### Взаимодействие с моделью данных
+
+После получения товаров с сервера их можно передать в модель данных `ProductCatalog`:
+
+```ts
+const apiService = new ApiService(api);
+const catalog = new ProductCatalog();
+
+apiService.getProducts()
+  .then(products => {
+    catalog.Products = products; // Сохраняем товары в каталог
+  });
+```
+
+
