@@ -1,13 +1,13 @@
-import { IBuyer } from "../../../types";
+import { IBuyer } from "../types";
+import { IPayment } from "../types";
 
 class CustomerData {
-    private payment: 'card' | 'cash' | '' = ''
+    private payment: IPayment = ''
     private email:string = ''
     private phone:string = ''
     private address:string = ''
     
-    constructor(data: Partial<IBuyer> = {}) {
-        this.setData(data);
+    constructor() {
     }
 
     setData(data: Partial<IBuyer>): void {
