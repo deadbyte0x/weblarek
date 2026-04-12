@@ -18,6 +18,7 @@ export abstract class Card<T> extends Component<T> {
         if (events?.onClick) {
             container.addEventListener('click', events.onClick)
         }
+
     }
     set title(value:string) {
         this.cardTitle.textContent = String(value)

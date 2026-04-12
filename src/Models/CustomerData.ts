@@ -17,7 +17,7 @@ class CustomerData {
         if (data.email !== undefined) this.customer.email = data.email;
         if (data.phone !== undefined) this.customer.phone = data.phone;
         if (data.address !== undefined) this.customer.address = data.address;
-        this.events.emit('buyer:changed', this.customer);
+        this.events.emit('buyer:changed', this.getData());
     }
 
     getData(): IBuyer {

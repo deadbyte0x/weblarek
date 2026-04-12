@@ -2,7 +2,6 @@ import './scss/styles.scss';
 
 // API
 import ApiService from './ApiService';
-import { apiProducts } from './utils/data';
 import { Api } from './components/base/Api';
 import { API_URL, CDN_URL } from './utils/constants';
 import { EventEmitter } from './components/base/Events';

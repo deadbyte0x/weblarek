@@ -33,11 +33,11 @@ export class CardPreview extends Card<ICardPreview> {
 
     set image(value:string) {
         this.cardImage.src = value
-        this.cardImage.alt = this.cardTitle.textContent || ""
+        this.cardImage.alt = this.cardTitle?.textContent ?? ""
     }
 
     set category(value:string) {
-        const modifier = categoryMap[value as keyof typeof categoryMap];
+        const modifier = categoryMap[value as keyof typeof categoryMap] || "";
         this.cardCategory.textContent = value
         this.cardCategory.className = `card__category ${modifier}`
     }
@@ -48,11 +48,13 @@ export class CardPreview extends Card<ICardPreview> {
         if (value === null) {
             this.cardButton.disabled = true
             this.cardButton.textContent = "Недоступно"
-        } else {this.cardButton.disabled = false}
+        } else {
+            this.cardButton.disabled = false
+        }
     }
 
     set buttonTitle(value:string) {
-        if(this.cardPrice.textContent !== "Бесценно") {
+        if(this.cardButton.disabled === false) {
             this.cardButton.textContent = value
         }
     }

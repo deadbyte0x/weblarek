@@ -9,7 +9,7 @@ class ProductCatalog {
 
     set products(products: IProduct[]) {
         this._products = products
-        this.events.emit('items:changed', { items: this._products });
+        this.events.emit('items:changed');
     }
 
     get products(): IProduct[] {
