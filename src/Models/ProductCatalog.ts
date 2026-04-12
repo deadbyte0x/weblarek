@@ -22,6 +22,7 @@ class ProductCatalog {
 
     setSelectedProduct(product: IProduct) {
         this._selectedProduct = product
+        this.events.emit('product:previewChanged', product);
     }
 
     get selectedProduct(): IProduct | null {

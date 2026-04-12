@@ -15,9 +15,6 @@ export abstract class Card<T> extends Component<T> {
         this.cardTitle = ensureElement<HTMLElement>('.card__title', container)
         this.cardPrice = ensureElement<HTMLElement>('.card__price', container)
 
-        if (events?.onClick) {
-            container.addEventListener('click', events.onClick)
-        }
 
     }
     set title(value:string) {

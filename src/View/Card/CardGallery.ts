@@ -15,6 +15,10 @@ export class CardGallery extends Card<ICardGallery> {
         super(container, events)
         this.cardImage = ensureElement<HTMLImageElement>('.card__image', container)
         this.cardCategory = ensureElement<HTMLElement>('.card__category', container)
+
+        if (events?.onClick) {
+            container.addEventListener('click', events.onClick)
+        }
     }
 
     set image(value:string) {

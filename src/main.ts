@@ -70,7 +70,7 @@ events.on('basket:changed', () => {
     
     const items = basketModel.items.map((item, index) => {
         const card = new CardBasket(cloneTemplate('#card-basket'), {
-            onClick: () => basketModel.removeItem(item)
+            onClick: () => events.emit("basket:remove-item", { id: item.id })
         });
         return card.render({
             title: item.title,
@@ -112,12 +112,17 @@ events.on('buyer:changed', (buyer: IBuyer) => {
 
 
 events.on('card:select', (item: IProduct) => {
-    productsModel.setSelectedProduct(item); 
+    productsModel.setSelectedProduct(item);
+});
+
+events.on('product:previewChanged', (item: IProduct) => {
     modal.render({
         content: cardPreview.render({
             ...item,
             image: CDN_URL + item.image,
-            buttonTitle: basketModel.hasProduct(item.id) ? 'Удалить из корзины' : 'В корзину'
+            buttonTitle: basketModel.hasProduct(item.id)
+                ? 'Удалить из корзины'
+                : 'В корзину'
         } as ICardPreview)
     });
 });
@@ -148,6 +153,13 @@ events.on('basket:open', () => {
     modal.render({ content: basketView.render({}) });
 });
 
+events.on('basket:remove-item', (data: { id: string }) => {
+    const product = basketModel.items.find((item) => item.id === data.id);
+    if (product) {
+        basketModel.removeItem(product);
+    }
+});
+
 events.on('order:open', () => {
     const data = customerModel.getData();
     const errors = customerModel.validate();
@@ -162,16 +174,7 @@ events.on('order:open', () => {
 });
 
 events.on('order:submit', () => {
-    const data = customerModel.getData();
-    const errors = customerModel.validate();
-    modal.render({
-        content: contactsForm.render({
-            email: data.email ?? '',
-            phone: data.phone ?? '',
-            valid: !errors.email && !errors.phone,
-            errors: Object.values({ email: errors.email, phone: errors.phone }).filter((i): i is string => !!i)
-        })
-    });
+modal.render({ content: contactsForm.render({}) })
 });
 
 events.on('contacts:submit', () => {
