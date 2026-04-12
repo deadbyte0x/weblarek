@@ -1,13 +1,15 @@
 import { IProduct } from "../types";
+import { IEvents } from "../components/base/Events";
 
 class ProductCatalog {
     private _products: IProduct[] = []
     private _selectedProduct: IProduct | null = null
     
-    constructor() {}
+    constructor(protected events: IEvents) {}
 
     set products(products: IProduct[]) {
         this._products = products
+        this.events.emit('items:changed', { items: this._products });
     }
 
     get products(): IProduct[] {
@@ -18,7 +20,7 @@ class ProductCatalog {
         return this._products.find(product => product.id === id);
     }
 
-    set selectedProduct(product: IProduct) {
+    setSelectedProduct(product: IProduct) {
         this._selectedProduct = product
     }
 

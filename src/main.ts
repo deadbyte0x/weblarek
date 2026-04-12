@@ -1,169 +1,203 @@
 import './scss/styles.scss';
+
+// API
+import ApiService from './ApiService';
 import { apiProducts } from './utils/data';
+import { Api } from './components/base/Api';
+import { API_URL, CDN_URL } from './utils/constants';
+import { EventEmitter } from './components/base/Events';
+
+// MODELS
 import ProductCatalog from './Models/ProductCatalog';
 import ProductCart from './Models/ProductCart';
 import CustomerData from './Models/CustomerData';
-import { Api } from './components/base/Api';
-import ApiService from './ApiService';
-import { API_URL } from './utils/constants';
 
-//PRODUCTCATALOG
-console.log('%c=== ТЕСТ PRODUCTCATALOG ===', 'color: blue; font-weight: bold;');
 
-const catalog = new ProductCatalog();
+// VIEW
 
-// Сохранение массива товаров
-console.log('%c1. Сохранение массива товаров:', 'color: blue; font-weight: bold;');
-catalog.products = apiProducts.items;
-console.log('✓ Товары сохранены');
+import { Gallery } from './View/Gallery';
+import { Header } from './View/Header';
+import { Modal } from './View/Modal';
+import { Basket } from './View/Basket';
+import { CardBasket } from './View/Card/CardBasket';
+import { CardGallery } from './View/Card/CardGallery';
+import { CardPreview, ICardPreview } from './View/Card/CardPreview';
+import { cloneTemplate, ensureElement } from './utils/utils';
+import { Order } from './View/Forms/OrderForm';
+import { Contacts } from './View/Forms/ContactsForm';
+import { Succes } from './View/Forms/SuccesForm';
 
-// Получение массива товаров
-console.log('%c2. Получение массива товаров:', 'color: blue; font-weight: bold;');
-console.log('Массив товаров из каталога:', catalog.products);
+import { IProduct, IBuyer, IOrderResponse } from './types';
 
-// Получение товара по ID
-console.log('%c3. Получение товара по ID:', 'color: blue; font-weight: bold;');
-const firstProductId = apiProducts.items[0].id;
-const productById = catalog.getProductById(firstProductId);
-console.log(`Товар с ID ${firstProductId}:`, productById);
+const api = new Api(API_URL)
+const apiService = new ApiService(api)
+const events = new EventEmitter()
 
-// Сохранение товара для подробного отображения
-console.log('%c4. Сохранение товара для подробного отображения:', 'color: blue; font-weight: bold;');
-catalog.selectedProduct = apiProducts.items[1];
-console.log('✓ Товар выбран:', catalog.selectedProduct);
 
-// Получение выбранного товара
-console.log('%c5. Получение выбранного товара:', 'color: blue; font-weight: bold;');
-console.log('Выбранный товар:', catalog.selectedProduct);
+const productsModel = new ProductCatalog(events)
+const basketModel = new ProductCart(events)
+const customerModel = new CustomerData(events)
 
-// PRODUCTCART 
-console.log('%c=== ТЕСТ PRODUCTCART ===', 'color: green; font-weight: bold;');
+const modal = new Modal(ensureElement<HTMLElement>('#modal-container'))
+const header = new Header(ensureElement<HTMLElement>('.header'), events);
+const gallery = new Gallery(ensureElement<HTMLElement>('.gallery'));
+const basketView = new Basket(cloneTemplate('#basket'), events);
+const orderForm = new Order(cloneTemplate('#order'), events);
+const contactsForm = new Contacts(cloneTemplate('#contacts'), events);
 
-const cart = new ProductCart([]);
+const cardPreview = new CardPreview(cloneTemplate('#card-preview'),{ onClick: () => events.emit('card:toggle-basket')})
+const succesView = new Succes(cloneTemplate('#success'), {onClick: () => modal.close()})
 
-// Добавление товаров в корзину
-console.log('%c1. Добавление товаров в корзину:', 'color: green; font-weight: bold;');
-cart.addItem(apiProducts.items[0]); // 750
-console.log('✓ Добавлен товар 1:', apiProducts.items[0].title, '(750)');
-cart.addItem(apiProducts.items[1]); // 1450
-console.log('✓ Добавлен товар 2:', apiProducts.items[1].title, '(1450)');
-cart.addItem(apiProducts.items[3]); // 2500
-console.log('✓ Добавлен товар 3:', apiProducts.items[3].title, '(2500z)');
 
-// Получение массива товаров в корзине
-console.log('%c2. Получение массива товаров в корзине:', 'color: green; font-weight: bold;');
-console.log('Товары в корзине:', cart.items);
 
-// Получение количества товаров
-console.log('%c3. Получение количества товаров:', 'color: green; font-weight: bold;');
-console.log('Количество товаров в корзине:', cart.getItemsCount());
-
-// Получение общей стоимости
-console.log('%c4. Получение стоимости всех товаров:', 'color: green; font-weight: bold;');
-console.log('Итоговая стоимость:', cart.totalPrice);
-
-// Проверка наличия товара по ID
-console.log('%c5. Проверка наличия товара в корзине:', 'color: green; font-weight: bold;');
-console.log('Товар 1 в корзине?', cart.hasProduct(apiProducts.items[0].id), '(ID:', apiProducts.items[0].id + ')');
-console.log('Товар 2 в корзине?', cart.hasProduct(apiProducts.items[1].id), '(ID:', apiProducts.items[1].id + ')');
-console.log('Несуществующий товар?', cart.hasProduct('fake-id'));
-
-// Удаление товара из корзины
-console.log('%c6. Удаление товара из корзины:', 'color: green; font-weight: bold;');
-console.log('Удаляем товар:', apiProducts.items[1].title);
-cart.removeItem(apiProducts.items[1]);
-console.log('✓ Товар удалён');
-console.log('Товары после удаления:', cart.items);
-console.log('Новая стоимость:', cart.totalPrice,);
-console.log('Товар 2 ещё в корзине?', cart.hasProduct(apiProducts.items[1].id));
-
-// Очистка корзины
-console.log('%c7. Очистка корзины:', 'color: green; font-weight: bold;');
-cart.clear();
-console.log('✓ Корзина очищена');
-console.log('Товары в корзине:', cart.items);
-console.log('Стоимость пустой корзины:', cart.totalPrice,);
-
-// CUSTOMERDATA 
-console.log('%c=== ТЕСТ CUSTOMERDATA ===', 'color: purple; font-weight: bold;');
-
-const customer = new CustomerData();
-
-// Сохранение данных (первый раз)
-console.log('%c1. Сохранение части данных:', 'color: purple; font-weight: bold;');
-customer.setData({
-  payment: 'card',
-  email: 'user@example.com'
+events.on('items:changed', () => {
+    gallery.catalog = productsModel.products.map(item => {
+        const card = new CardGallery(cloneTemplate('#card-catalog'), {
+            onClick: () => events.emit('card:select', item)
+        });
+        
+        return card.render({
+            title: item.title,
+            price: item.price,
+            category: item.category,
+            image: CDN_URL + item.image 
+        });
+    });
 });
-console.log('✓ Сохранены: метод оплаты и email');
-console.log('Текущие данные:', customer.getData());
 
-// Сохранение данных (второй раз, без затирания старых)
-console.log('%c2. Добавление остальных данных (без затирания):', 'color: purple; font-weight: bold;');
-customer.setData({
-  phone: '+7 (999) 123-45-67',
-  address: 'ул. Пушкина, д. 1'
-});
-console.log('✓ Добавлены: телефон и адрес');
-console.log('Все данные покупателя:', customer.getData());
 
-// Получение всех данных
-console.log('%c3. Получение всех данных покупателя:', 'color: purple; font-weight: bold;');
-console.log('Данные:', customer.getData());
-
-// Валидация полных данных
-console.log('%c4. Валидация заполненных данных:', 'color: purple; font-weight: bold;');
-let errors = customer.validate();
-console.log('Ошибки:', Object.keys(errors).length === 0 ? '✓ Нет ошибок' : errors);
-
-// Очистка данных
-console.log('%c5. Очистка данных покупателя:', 'color: purple; font-weight: bold;');
-customer.clear();
-console.log('✓ Данные очищены');
-console.log('Данные после очистки:', customer.getData());
-
-// Валидация пустых данных
-console.log('%c6. Валидация пустых данных:', 'color: purple; font-weight: bold;');
-errors = customer.validate();
-console.log('Ошибки (должны быть все 4 поля):', errors);
-
-// Валидация с частичными данными
-console.log('%c7. Валидация с частичными данными:', 'color: purple; font-weight: bold;');
-customer.setData({
-  payment: 'cash',
-  email: 'test@mail.ru'
-  // phone и address не установлены
-});
-console.log('Установлены: payment и email');
-console.log('Текущие данные:', customer.getData());
-errors = customer.validate();
-console.log('Ошибки (должны быть phone и address):', errors);
-
-console.log('%c=== ВСЕ ТЕСТЫ ЗАВЕРШЕНЫ ===', 'color: red; font-weight: bold;');
-
-// ПОЛУЧЕНИЕ ТОВАРОВ С СЕРВЕРА 
-console.log('%c=== ПОЛУЧЕНИЕ ТОВАРОВ С СЕРВЕРА ===', 'color: orange; font-weight: bold;');
-
-// Инициализация API и ApiService
-const api = new Api(API_URL);
-const apiService = new ApiService(api);
-
-// Создаём каталог для товаров с сервера
-const serverCatalog = new ProductCatalog();
-
-// Получаем товары с сервера
-apiService.getProducts()
-  .then((response) => {
-    console.log('%c✓ Товары успешно получены с сервера', 'color: orange; font-weight: bold;');
-    console.log('Всего товаров:', response.total);
-    console.log('Товары:', response.items);
+events.on('basket:changed', () => {
+    header.counter = basketModel.getItemsCount();
     
-    // Сохраняем товары в каталог
-    serverCatalog.products = response.items;
-    console.log('%c✓ Товары сохранены в каталог', 'color: orange; font-weight: bold;');
-    console.log('Каталог товаров:', serverCatalog.products);
-  })
-  .catch((error) => {
-    console.error('%c✗ Ошибка при получении товаров с сервера:', 'color: red; font-weight: bold;', error);
-  });
+    const items = basketModel.items.map((item, index) => {
+        const card = new CardBasket(cloneTemplate('#card-basket'), {
+            onClick: () => basketModel.removeItem(item)
+        });
+        return card.render({
+            title: item.title,
+            price: item.price,
+            index: index + 1
+        });
+    });
 
+    basketView.render({
+        items,
+        total: basketModel.totalPrice
+    });
+});
+
+
+
+events.on('buyer:changed', (buyer: IBuyer) => {
+    const errors = customerModel.validate();
+    
+    const orderErrors = Object.values({ payment: errors.payment, address: errors.address })
+        .filter((i): i is string => !!i);
+    const contactErrors = Object.values({ email: errors.email, phone: errors.phone })
+        .filter((i): i is string => !!i);
+
+    orderForm.render({
+        address: buyer.address ?? '',
+        payment: (buyer.payment as string) ?? '',
+        valid: !errors.payment && !errors.address,
+        errors: orderErrors
+    });
+
+    contactsForm.render({
+        email: buyer.email ?? '',
+        phone: buyer.phone ?? '',
+        valid: !errors.email && !errors.phone,
+        errors: contactErrors
+    });
+});
+
+
+events.on('card:select', (item: IProduct) => {
+    productsModel.setSelectedProduct(item); 
+    modal.render({
+        content: cardPreview.render({
+            ...item,
+            image: CDN_URL + item.image,
+            buttonTitle: basketModel.hasProduct(item.id) ? 'Удалить из корзины' : 'В корзину'
+        } as ICardPreview)
+    });
+});
+
+
+events.on('card:toggle-basket', () => {
+    const item = productsModel.selectedProduct;
+    if (item) {
+        if (basketModel.hasProduct(item.id)) {
+            basketModel.removeItem(item);
+        } else {
+            basketModel.addItem(item);
+        }
+        modal.close();
+    }
+});
+
+
+events.on('payment:change', (data: { target: string }) => {
+    customerModel.setData({ payment: data.target as any });
+});
+
+events.on(/^order\..*:change|^contacts\..*:change/, (data: { field: keyof IBuyer, value: string }) => {
+    customerModel.setData({ [data.field]: data.value });
+});
+
+events.on('basket:open', () => {
+    modal.render({ content: basketView.render({}) });
+});
+
+events.on('order:open', () => {
+    const data = customerModel.getData();
+    const errors = customerModel.validate();
+    modal.render({
+        content: orderForm.render({
+            address: data.address ?? '',
+            payment: (data.payment as string) ?? '',
+            valid: !errors.payment && !errors.address,
+            errors: Object.values({ payment: errors.payment, address: errors.address }).filter((i): i is string => !!i)
+        })
+    });
+});
+
+events.on('order:submit', () => {
+    const data = customerModel.getData();
+    const errors = customerModel.validate();
+    modal.render({
+        content: contactsForm.render({
+            email: data.email ?? '',
+            phone: data.phone ?? '',
+            valid: !errors.email && !errors.phone,
+            errors: Object.values({ email: errors.email, phone: errors.phone }).filter((i): i is string => !!i)
+        })
+    });
+});
+
+events.on('contacts:submit', () => {
+    const orderData = {
+        ...customerModel.getData(),
+        total: basketModel.totalPrice,
+        items: basketModel.items.map(item => item.id)
+    };
+
+    apiService.postOrder(orderData)
+        .then((result: IOrderResponse) => {
+            basketModel.clear();
+            customerModel.clear();
+
+            modal.render({
+                content: succesView.render({
+                    total: result.total
+                })
+            });
+        })
+        .catch(console.error);
+});
+
+apiService.getProducts()
+    .then((items) => {
+        productsModel.products = items.items;
+    })
+    .catch(console.error);

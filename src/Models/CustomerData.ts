@@ -1,54 +1,57 @@
 import { IBuyer } from "../types";
-import { IPayment } from "../types";
+import { IEvents } from "../components/base/Events";
 
 class CustomerData {
-    private payment: IPayment = ''
-    private email:string = ''
-    private phone:string = ''
-    private address:string = ''
+    protected customer: IBuyer = {
+    payment: '',
+    email: '',
+    phone: '',
+    address: '',
+    }
     
-    constructor() {
+    constructor(protected events: IEvents) {
     }
 
     setData(data: Partial<IBuyer>): void {
-        if (data.payment !== undefined) this.payment = data.payment;
-        if (data.email !== undefined) this.email = data.email;
-        if (data.phone !== undefined) this.phone = data.phone;
-        if (data.address !== undefined) this.address = data.address;
+        if (data.payment !== undefined) this.customer.payment = data.payment;
+        if (data.email !== undefined) this.customer.email = data.email;
+        if (data.phone !== undefined) this.customer.phone = data.phone;
+        if (data.address !== undefined) this.customer.address = data.address;
+        this.events.emit('buyer:changed', this.customer);
     }
 
     getData(): IBuyer {
         return {
-            payment: this.payment,
-            email: this.email,
-            phone: this.phone,
-            address: this.address,
+            payment: this.customer.payment,
+            email: this.customer.email,
+            phone: this.customer.phone,
+            address: this.customer.address,
         }
     }
 
     clear(): void {
-        this.payment = '';
-        this.email = '';
-        this.phone = '';
-        this.address = '';
+        this.customer.payment = '';
+        this.customer.email = '';
+        this.customer.phone = '';
+        this.customer.address = '';
     }
 
     validate(): Record<string, string> {
         const errors: Record<string, string> = {};
 
-        if (!this.payment) {
+        if (!this.customer.payment) {
             errors.payment = 'Не выбран вид оплаты';
         }
 
-        if (!this.email) {
+        if (!this.customer.email) {
             errors.email = 'Укажите email';
         }
 
-        if (!this.phone) {
+        if (!this.customer.phone) {
             errors.phone = 'Укажите телефон';
         }
 
-        if (!this.address) {
+        if (!this.customer.address) {
             errors.address = 'Укажите адрес';
         }
 
